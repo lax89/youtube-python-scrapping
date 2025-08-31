@@ -1,4 +1,3 @@
 #!/bin/bash
-wget https://storage.googleapis.com/chromium-browser-snapshots/Linux_x64/1125892/chrome-linux.zip
-unzip chrome-linux.zip
-mv chrome-linux chrome
+apt-get update
+xargs -a apt.txt apt-get install -y
