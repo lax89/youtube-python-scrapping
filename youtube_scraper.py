@@ -11,7 +11,7 @@ import time
 # driver = webdriver.Chrome(service=Service(ChromeDriverManager().install(version="latest")))
 
 
-service = Service(ChromeDriverManager(driver_version="139.0.7258.155").install())
+service = Service(ChromeDriverManager(driver_version="139.0.7258.154").install())
 
 
 # driver = webdriver.Chrome(service=service)
@@ -126,6 +126,7 @@ def web_scraper(query, max_results):
  
 # C:/Users/PC/Downloads/chromedriver-1/chromedriver-win64/chromedriver.exe
  return df
+
 
 
 
