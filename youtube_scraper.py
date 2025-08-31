@@ -130,4 +130,4 @@ def web_scraper(query, max_results):
 
 
 
-print(web_scraper("farming technology", 10))
+
