@@ -5,13 +5,21 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.support import expected_conditions as EC
 from webdriver_manager.chrome import ChromeDriverManager
+from selenium.webdriver.chrome.options import Options
 import pandas as pd
 import time
+import shutil
 
 # driver = webdriver.Chrome(service=Service(ChromeDriverManager().install(version="latest")))
 
 
-service = Service(ChromeDriverManager(driver_version="139.0.7258.154").install())
+# service = Service(ChromeDriverManager(driver_version="139.0.7258.154").install())
+binary_path = shutil.which("chromium-browser") or shutil.which("google-chrome") or shutil.which("google-chrome-stable")
+
+options = Options()
+if binary_path:
+    options.binary_location = binary_path
+
 
 
 # driver = webdriver.Chrome(service=service)
@@ -27,7 +35,10 @@ def web_scraper(query, max_results):
  options = webdriver.ChromeOptions()
  
  options.add_argument("--headless=new")
- driver = webdriver.Chrome(service=service, options=options)
+ driver = webdriver.Chrome(
+    service=Service(ChromeDriverManager().install()),
+    options=options
+)
  driver.get(f"https://www.youtube.com/results?search_query={query}")
  wait = WebDriverWait(driver, 20)
  try:
@@ -126,6 +137,7 @@ def web_scraper(query, max_results):
  
 # C:/Users/PC/Downloads/chromedriver-1/chromedriver-win64/chromedriver.exe
  return df
+
 
 
 
