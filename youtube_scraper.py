@@ -1,147 +1,90 @@
-from selenium import webdriver
-from selenium.webdriver.common.by import By
-from selenium.webdriver.common.keys import Keys
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.chrome.service import Service
-from selenium.webdriver.support import expected_conditions as EC
-from webdriver_manager.chrome import ChromeDriverManager
-from selenium.webdriver.chrome.options import Options
+# pip install playwright pandas
+# python -m playwright install
+
+from playwright.sync_api import sync_playwright, TimeoutError as PlaywrightTimeoutError
+from urllib.parse import quote_plus
 import pandas as pd
-import time
-import shutil
 
-# driver = webdriver.Chrome(service=Service(ChromeDriverManager().install(version="latest")))
+def web_scraper(query: str, max_results, scrolls):
+    results = []
+    
 
-
-# service = Service(ChromeDriverManager(driver_version="139.0.7258.154").install())
-binary_path = shutil.which("chromium-browser") or shutil.which("google-chrome") or shutil.which("google-chrome-stable")
-
-options = Options()
-if binary_path:
-    options.binary_location = binary_path
-
-
-
-# driver = webdriver.Chrome(service=service)
-# driver.get("https://www.youtube.com/results?search_query=farming+technology")
-
-
-# search_box = driver.find_element(By.NAME, "search_query")
-# search_box.send_keys("farming technology")  # type text
-# search_box.submit()  # press Enter
-# wait = WebDriverWait(driver, 30)
-def web_scraper(query, max_results):
- 
- options = webdriver.ChromeOptions()
- 
- options.add_argument("--headless=new")
- driver = webdriver.Chrome(
-    service=Service(ChromeDriverManager().install()),
-    options=options
-)
- driver.get(f"https://www.youtube.com/results?search_query={query}")
- wait = WebDriverWait(driver, 20)
- try:
-  videos_tab = wait.until(EC.element_to_be_clickable(
-    (By.XPATH, '//yt-chip-cloud-chip-renderer//div[text()="Videos"]')
-))
-  videos_tab.click()
-  last_height = driver.execute_script("return document.documentElement.scrollHeight")
-  # while len(data) < max_results:
-  for i in range(2):
-        driver.execute_script("window.scrollTo(0, document.documentElement.scrollHeight);")
-        time.sleep(4)  # wait for new videos to load
-
-        data = []
-        
-        # videos = driver.find_elements(By.XPATH, '//ytd-video-renderer')
-        # if len(videos) >= max_results:
-        #     break
-
-  # wait.until(EC.presence_of_element_located((By.ID, "video-title")))
-#   wait.until(EC.presence_of_all_elements_located((By.ID, "video-title")))
-#   videos = driver.find_elements(By.ID, "video-title")
-#   descriptions = driver.find_elements(
-#     By.CSS_SELECTOR, "yt-formatted-string.metadata-snippet-text.style-scope.ytd-video-renderer"
-# )
-
-
-#   for i in range(20):
-#      video = driver.find_elements(By.ID, "video-title")[i]
-#      desc = driver.find_elements(By.CSS_SELECTOR,
-#         "yt-formatted-string.metadata-snippet-text.style-scope.ytd-video-renderer")[i]
-
-#      contents = driver.find_elements(By.ID, "content")
-    #  for idx, content in enumerate(contents):
-    #   print(f"\n--- Content Block {idx+1} ---")
-    # # Find all <a> links inside this block
-    #   links = content.find_elements(By.TAG_NAME, "a")
-        
-        wait.until(EC.presence_of_all_elements_located((By.TAG_NAME, 'ytd-item-section-renderer')))
-        videos = driver.find_elements(By.TAG_NAME, 'ytd-item-section-renderer')
-         
-        
-        for v1 in videos[:max_results]:
-         for v in v1.find_elements(By.TAG_NAME, 'ytd-video-renderer'):
-          try:
-           title = v.find_element(By.ID, 'video-title')
-           
-           title1 = title.get_attribute('title')
-           
-          
-           
-           
-           
-                
-           link = title.get_attribute('href')
-    #        descriptions = v.find_element(
-    #  By.XPATH, './/div//yt-formatted-string[contains(@class, "metadata-snippet-text")]')
-           descriptions=WebDriverWait(v,10).until(EC.presence_of_element_located((By.CSS_SELECTOR, 'yt-formatted-string.metadata-snippet-text.style-scope.ytd-video-renderer')))
-           
-    #        descriptions = v.find_element(
-    #  By.CSS_SELECTOR, "div.yt-formatted-string.metadata-snippet-container.style-scope.ytd-video-renderer yt-formatted-string.metadata-snippet-text.style-scope.ytd-video-renderer")
-           desc = descriptions.text
-          
-                  
-                
-                
-           data.append({'title' :title1,
-        
-        
-        'link':link, 
-        'description': desc
-
-     })
-           
-          
-           
-      
-          except Exception as e:
-            print('error extracting video data:', e)  
-          
-          # except Exception as e:
-          #  print('error extracting video data:', e) 
+    with sync_playwright() as p:
+        browser = p.chromium.launch(headless=True)
+    
        
-            
-     
-    #  print(desc.text)
-    #  print("-"*60)
+        context = browser.new_context(viewport={"width": 1366, "height": 768})
+        page = context.new_page()
 
-  
- except Exception as e:
-  print("Error:", e)    
- finally:
-    driver.quit()
- df = pd.DataFrame(datas for datas in data)
-  
- 
-# C:/Users/PC/Downloads/chromedriver-1/chromedriver-win64/chromedriver.exe
- return df
+        # Open search page
+        page.goto(f"https://www.youtube.com/results?search_query={quote_plus(query)}", wait_until="domcontentloaded")
+
+        # Click the "Videos" tab if present
+        try:
+            page.locator('xpath=//yt-chip-cloud-chip-renderer//div[normalize-space()="Videos"]').first.click()
+            page.wait_for_selector("ytd-video-renderer", timeout=10000)
+        except PlaywrightTimeoutError:
+            # Videos chip not found quickly — continue with default results
+            pass
+        except Exception:
+            pass
+
+        # Limited scrolling (like your for-range loop)
+        for _ in range(scrolls):
+            page.evaluate("window.scrollTo(0, document.documentElement.scrollHeight);")
+            page.wait_for_timeout(1500)  # small pause so more results render
+
+        # Iterate sections, then videos (mirrors your structure)
+        sections = page.locator("ytd-item-section-renderer")
+        for si in range(sections.count()):
+            section = sections.nth(si)
+            videos = section.locator("ytd-video-renderer")
+
+            for vi in range(videos.count()):
+                if len(results) >= max_results:
+                    break
+
+                v = videos.nth(vi)
+                try:
+                    # Title + href from #video-title
+                    title_el = v.locator("#video-title").first
+                    # Some results only expose 'title' attr; others have text
+                    title = (title_el.get_attribute("title") or title_el.inner_text()).strip()
+                    href = title_el.get_attribute("href")
+                    if not href:
+                        continue
+                    if href.startswith("/"):
+                        href = "https://www.youtube.com" + href
+
+                    # Description (optional)
+                    desc_el = v.locator("yt-formatted-string.metadata-snippet-text").first
+                    try:
+                        description = desc_el.inner_text().strip()
+                    except Exception:
+                        description = None
+
+                    results.append({
+                        "title": title,
+                        "link": href,
+                        "description": description
+                    })
+                except Exception:
+                    # Skip cards/ads/special renderers
+                    continue
+
+            if len(results) >= max_results:
+                break
+
+        browser.close()
+
+    # Optional: drop duplicate links and trim to max_results
+    df = pd.DataFrame(results)
+    if not df.empty:
+        df = df.drop_duplicates(subset="link", keep="first").head(max_results)
+    return df
 
 
+# Example
 
-
-
-
-
-
+# df = web_scraper("farming technology", max_results=100, scrolls=4)
+# print(len(set(df['description'].unique())))
