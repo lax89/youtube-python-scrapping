@@ -83,31 +83,8 @@ def web_scraper(query: str, max_results, scrolls):
         df = df.drop_duplicates(subset="link", keep="first").head(max_results)
     return df
 
-def main():
-    import os
-    path_name = "youtube-python-scrapping"
-    folder = os.listdir(path_name)
-    print(f"Running from folder: {folder}")
-    with open('youtube_scraper.py', 'r') as g:
-        content = g.read()
-        
-        
-        
-    for file in folder:
-         if file == "youtube_scraper.py":
-           print(f"writing file: {file}")
-           target_path = os.path.join(path_name, file)
-           with open(target_path, 'w') as f:
-               f.open(target_path, 'w').write(content)
-               
-               print(f)
-               
-               
-    # print(f"Running from: {dir}")
-    # dir_name = "/youtube-python-scrapping"
-    # for dir in 
+
 # Example
 
 # df = web_scraper("farming technology", max_results=100, scrolls=4)
 # print(len(set(df['description'].unique())))
-main()
