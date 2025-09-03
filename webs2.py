@@ -35,6 +35,12 @@ def main():
             value=5,
             help="Number of pages to scrape (more pages = more results but slower)"
         )
+        scrolls = st.slider(
+            "Scrolls per Page", 
+            min_value=1, 
+            max_value=10, 
+            value=3,
+            help="Number of scroll actions to load more results"
         
         delay_between_requests = st.slider(
             "Delay Between Requests (seconds)", 
@@ -135,7 +141,7 @@ def main():
             
             # Initialize scraper and get results
             try:
-                all_results = web_scraper(search_query, max_results)
+                all_results = web_scraper(search_query, max_results, scrolls)
                 status_text.text(f"📄 Scraping {max_results} page(s)...")
                 progress_bar.progress(50)
                 
@@ -241,3 +247,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
