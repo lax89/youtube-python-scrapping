@@ -40,7 +40,7 @@ def main():
             min_value=1, 
             max_value=10, 
             value=3,
-            help="Number of scroll actions to load more results"
+            help="Number of scroll actions to load more results")
         
         delay_between_requests = st.slider(
             "Delay Between Requests (seconds)", 
@@ -247,4 +247,5 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
