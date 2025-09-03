@@ -14,4 +14,4 @@ RUN pip install --no-cache-dir -r requirements.txt
 EXPOSE 8501
 
 # Start Streamlit when container runs
-CMD ["streamlit", "run", "streamlit.py", "--server.port=8501", "--server.address=0.0.0.0"]
+CMD ["streamlit", "run", "webs2.py", "--server.port=8501", "--server.address=0.0.0.0"]
